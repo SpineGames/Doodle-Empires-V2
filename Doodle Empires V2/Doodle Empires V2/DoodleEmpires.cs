@@ -55,12 +55,14 @@ namespace Doodle_Empires_V2
             Texture2D blank = new Texture2D(GraphicsDevice, 1, 1, false, SurfaceFormat.Color);
             blank.SetData(new[] { Color.White });
 
+            Texture2D blankDark = Content.Load<Texture2D>("HUD/blankDark");
+
             effect = new BasicEffect(GraphicsDevice);
             effect.View = Matrix.CreateOrthographicOffCenter(0, 700, 125, -125, 0, 1);
             effect.VertexColorEnabled = true;
-            
-            horizontalSlider = new Slider(0F, spriteBatch, new Rectangle(20, 5, 760, 10), blank, blank);
-            verticalSlider = new Slider(0F, spriteBatch, new Rectangle(780, 15, 10, 450), blank, blank, 1);
+
+            horizontalSlider = new Slider(0F, spriteBatch, new Rectangle(20, 5, 760, 10), blankDark, blankDark);
+            verticalSlider = new Slider(0F, spriteBatch, new Rectangle(780, 15, 10, 450), blankDark, blankDark, 1);
 
             cursor = new Vector2(400, 240);
 
@@ -155,8 +157,8 @@ namespace Doodle_Empires_V2
 
             level.tick(gameTime, winPos);
 
-            winPos.X = MathHelper.Clamp(winPos.X, 1, level.getWidth() - winWidth);
-            winPos.Y = MathHelper.Clamp(winPos.Y, -level.getHeight(), level.getHeight() - winHeight);
+            winPos.X = (int)MathHelper.Clamp(winPos.X, 1, level.getWidth() - winWidth);
+            winPos.Y = (int)MathHelper.Clamp(winPos.Y, -level.getHeight(), level.getHeight() - winHeight);
 
             base.Update(gameTime);
         }
@@ -180,7 +182,7 @@ namespace Doodle_Empires_V2
             level.render(effect, spriteBatch, winPos, gameTime);
             
             spriteBatch.Begin();
-            spriteBatch.DrawString(debugFont, "FPS: " + fps.getFrameRate(), new Vector2(5, 5), Color.White);
+            spriteBatch.DrawString(debugFont, "FPS: " + fps.getFrameRate(), new Vector2(5, 5), Color.Black);
 
             horizontalSlider.setValue(winPos.X / (level.getWidth() - winWidth));
             horizontalSlider.update(true);
@@ -213,7 +215,6 @@ namespace Doodle_Empires_V2
             int levelHeight = 4000;
 
             Random rand = new Random();
-            SimpleParticleSystem partSystem;
             BasicEffect effect;
             Vector2 winPos;
 
@@ -221,7 +222,6 @@ namespace Doodle_Empires_V2
             List<Team> teams = new List<Team>();
             List<Bullet> bullets = new List<Bullet>();
             VertexPositionColor[] landVerts;
-            VertexPositionColor[] skyVerts;
 
             bool mousePrevDown;
             Vector2 pos1, pos2;
@@ -233,23 +233,7 @@ namespace Doodle_Empires_V2
             public Level(int levelWidth, Texture2D blank)
             {
                 heightmap = extraMath.MidpointDisplacement(levelWidth / 64, 0, levelWidth);
-                partSystem = new SimpleParticleSystem(blank, 0);
                 rebuildGeometry();
-
-                //skyVerts = new VertexPositionColor[heightmap.Length * 4];
-
-                //Color brn = Color.FromNonPremultiplied(165, 42, 42, 128);
-                //Color blk = Color.FromNonPremultiplied(0, 0, 0, 128);
-                //Color lb = Color.FromNonPremultiplied(173, 216, 255, 128);
-
-                //for (int xx = 0; xx < heightmap.Length; xx +=4)
-                //{
-                //    skyVerts[xx] = new VertexPositionColor(new Vector3(xx / 4, -levelHeight, 0), blk);
-                //    skyVerts[xx + 1] = new VertexPositionColor(new Vector3(xx / 4, 0, 0), lb);
-
-                //    skyVerts[xx + 2] = new VertexPositionColor(new Vector3(xx / 4, 0, 0), lb);
-                //    skyVerts[xx + 3] = new VertexPositionColor(new Vector3(xx / 4, levelHeight, 0), brn);
-                //}
             }
 
             /// <summary>
@@ -271,11 +255,7 @@ namespace Doodle_Empires_V2
 
                 for (int xx = x1; xx < x2; xx ++)
                 {
-                    //landVerts[xx] = new VertexPositionColor(new Vector3(xx / 4, -heightmap[xx / 4], 0), Color.FromNonPremultiplied(128,128,0, 200));
-                    //landVerts[xx + 1] = new VertexPositionColor(new Vector3(xx / 4, -heightmap[xx / 4] + 100, 0), Color.FromNonPremultiplied(210, 180, 140, 200));
-
-                    //landVerts[xx + 2] = new VertexPositionColor(new Vector3(xx / 4, -heightmap[xx / 4] + 100, 0), Color.FromNonPremultiplied(210, 180, 140, 200));
-                    landVerts[xx] = new VertexPositionColor(new Vector3(xx, levelHeight, 0), Color.FromNonPremultiplied(0, 0, 0, 200));
+                    landVerts[xx] = new VertexPositionColor(new Vector3(xx, -heightmap[xx], 0), Color.Black);
                 }
             }
 
@@ -295,19 +275,7 @@ namespace Doodle_Empires_V2
                     f += 0.5F;
 
                     effect.CurrentTechnique.Passes[0].Apply();
-                    //effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, skyVerts, (int)(winPos.X) * 4, 1600);
-
-                    //loop through the terrain points on screen
-                    //for (int i = (int)winPos.X; i < (int)winPos.X + winWidth; i++)
-                    //{
-                    //    //draw's the water
-                    //    if (-10 > heightmap[i])
-                    //        AdvancedDrawFuncs.DrawLine(effect, new Vector2(i, 10 + (float)Math.Sin((f + i) / 10)),
-                    //            new Vector2(i, (-heightmap[i])), new Color(173, 216, 230, 200),
-                    //            new Color(0, 0, 255, 200));
-                    //}
-
-                    effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, landVerts, (int)(winPos.X), 1600);
+                    effect.GraphicsDevice.DrawUserPrimitives(PrimitiveType.LineList, landVerts, 0, getWidth()/2);
 
                     //Draws all the vegetation
                     foreach (Vegetation veg in vegetation)
@@ -317,17 +285,16 @@ namespace Doodle_Empires_V2
 
                     foreach (Bullet b in bullets)
                         b.render(effect);
-
-                    spriteBatch.Begin();
-
-                    foreach (Team team in teams)
-                    {
-                        team.render(effect, gameTime, new Point((int)winPos.X, (int)winPos.Y));
-                    }
-
-                    partSystem.tick(spriteBatch,winPos, this);
-                    spriteBatch.End();
                 }
+
+                spriteBatch.Begin();
+
+                foreach (Team team in teams)
+                {
+                    team.render(effect, gameTime, new Point((int)winPos.X, (int)winPos.Y));
+                }
+
+                spriteBatch.End();
             }
 
             /// <summary>
@@ -545,7 +512,7 @@ namespace Doodle_Empires_V2
 
             public void particleBurst(Vector2 position, Color color)
             {
-                partSystem.burst(position, color, Color.Transparent, new Vector2(1,-3F), 100, 3F, 3F, 100);
+
             }
 
             /// <summary>
@@ -735,574 +702,574 @@ namespace Doodle_Empires_V2
                 }
             }
 
-            public class SimpleParticleSystem
-            {
-                Texture2D texture;
-                Texture2D[] goreTexs;
-                particle[] particles;
-                List<particle> particleList = new List<particle>();
-                List<Gore> goreList = new List<Gore>();
-                Emitter[] emitters = new Emitter[10];
-                List<RectEmitter> rectEmitters = new List<RectEmitter>();
-                public Stream[] streams = new Stream[10];
-                public int partCount = 0;
-                public byte index = 0;
-                Random rand = new Random();
+            //public class SimpleParticleSystem
+            //{
+            //    Texture2D texture;
+            //    Texture2D[] goreTexs;
+            //    particle[] particles;
+            //    List<particle> particleList = new List<particle>();
+            //    List<Gore> goreList = new List<Gore>();
+            //    Emitter[] emitters = new Emitter[10];
+            //    List<RectEmitter> rectEmitters = new List<RectEmitter>();
+            //    public Stream[] streams = new Stream[10];
+            //    public int partCount = 0;
+            //    public byte index = 0;
+            //    Random rand = new Random();
 
-                public SimpleParticleSystem(Texture2D tex, byte index = 0, int maxSize = 1000)
-                {
-                    this.index = index;
-                    this.texture = tex;
-                    particles = new particle[maxSize];
-                }
+            //    public SimpleParticleSystem(Texture2D tex, byte index = 0, int maxSize = 1000)
+            //    {
+            //        this.index = index;
+            //        this.texture = tex;
+            //        particles = new particle[maxSize];
+            //    }
 
-                public SimpleParticleSystem(Texture2D tex, byte index = 0)
-                {
-                    this.index = index;
-                    this.texture = tex;
-                    particles = new particle[10000];
-                }
+            //    public SimpleParticleSystem(Texture2D tex, byte index = 0)
+            //    {
+            //        this.index = index;
+            //        this.texture = tex;
+            //        particles = new particle[10000];
+            //    }
 
-                public SimpleParticleSystem(Texture2D tex, Texture2D[] goreTexs, byte index = 0)
-                {
-                    this.index = index;
-                    this.texture = tex;
-                    particles = new particle[10000];
-                    this.goreTexs = goreTexs;
-                }
+            //    public SimpleParticleSystem(Texture2D tex, Texture2D[] goreTexs, byte index = 0)
+            //    {
+            //        this.index = index;
+            //        this.texture = tex;
+            //        particles = new particle[10000];
+            //        this.goreTexs = goreTexs;
+            //    }
 
-                /// <summary>
-                /// Spawns a particle at pos with the specified paramenters
-                /// </summary>
-                /// <param name="pos">The position of the particle</param>
-                /// <param name="size">The size of the particle</param>
-                /// <param name="lifeSpan">The number of ticks until the partle gets disposed</param>
-                /// <param name="hspeed">The horizontal speed</param>
-                /// <param name="vspeed">The vertical speed</param>
-                /// <param name="color">The initial color</param>
-                /// <param name="endColor">The final color before fading out</param>
-                public void addEffect(Vector2 pos, float size, int lifeSpan, float hspeed, float vspeed, Color color, Color endColor)
-                {
-                    hspeed *= (float)(rand.NextDouble() * 2) - 1F;
-                    vspeed *= (float)(rand.NextDouble() * 2) - 1F;
-                    particleList.Add(new particle(this, pos, color, endColor, size, lifeSpan + rand.Next(50), new Vector2(hspeed, vspeed)));
-                }
+            //    /// <summary>
+            //    /// Spawns a particle at pos with the specified paramenters
+            //    /// </summary>
+            //    /// <param name="pos">The position of the particle</param>
+            //    /// <param name="size">The size of the particle</param>
+            //    /// <param name="lifeSpan">The number of ticks until the partle gets disposed</param>
+            //    /// <param name="hspeed">The horizontal speed</param>
+            //    /// <param name="vspeed">The vertical speed</param>
+            //    /// <param name="color">The initial color</param>
+            //    /// <param name="endColor">The final color before fading out</param>
+            //    public void addEffect(Vector2 pos, float size, int lifeSpan, float hspeed, float vspeed, Color color, Color endColor)
+            //    {
+            //        hspeed *= (float)(rand.NextDouble() * 2) - 1F;
+            //        vspeed *= (float)(rand.NextDouble() * 2) - 1F;
+            //        particleList.Add(new particle(this, pos, color, endColor, size, lifeSpan + rand.Next(50), new Vector2(hspeed, vspeed)));
+            //    }
 
-                public bool addEffect(Vector2 pos, float size, int lifeSpan, Vector2 speed, Color color, Color endColor)
-                {
-                    speed.X *= (float)(rand.NextDouble() * 2) - 1F;
-                    speed.Y *= (float)(rand.NextDouble() * 2) - 1F;
-                    particleList.Add(new particle(this, pos, color, endColor, size, lifeSpan + rand.Next(50), speed));
-                    return true;
-                }
+            //    public bool addEffect(Vector2 pos, float size, int lifeSpan, Vector2 speed, Color color, Color endColor)
+            //    {
+            //        speed.X *= (float)(rand.NextDouble() * 2) - 1F;
+            //        speed.Y *= (float)(rand.NextDouble() * 2) - 1F;
+            //        particleList.Add(new particle(this, pos, color, endColor, size, lifeSpan + rand.Next(50), speed));
+            //        return true;
+            //    }
 
-                public bool addGore(Vector2 pos, float size, int lifeSpan, int texID, Vector2 speed, Color color, Color endColor)
-                {
-                    speed.X *= (float)(rand.NextDouble() * 2) - 1F;
-                    speed.Y *= (float)(rand.NextDouble() * 2) - 1F;
-                    goreList.Add(new Gore(this, pos, color, endColor, size, lifeSpan + rand.Next(50), speed, texID));
-                    return true;
-                }
+            //    public bool addGore(Vector2 pos, float size, int lifeSpan, int texID, Vector2 speed, Color color, Color endColor)
+            //    {
+            //        speed.X *= (float)(rand.NextDouble() * 2) - 1F;
+            //        speed.Y *= (float)(rand.NextDouble() * 2) - 1F;
+            //        goreList.Add(new Gore(this, pos, color, endColor, size, lifeSpan + rand.Next(50), speed, texID));
+            //        return true;
+            //    }
 
-                private void destroyParticle(particle part)
-                {
-                    particleList.Remove(part);
-                }
+            //    private void destroyParticle(particle part)
+            //    {
+            //        particleList.Remove(part);
+            //    }
 
-                private void destroyGore(Gore part)
-                {
-                    goreList.Remove(part);
-                }
+            //    private void destroyGore(Gore part)
+            //    {
+            //        goreList.Remove(part);
+            //    }
 
-                public void changeStreamDirection(int streamId, float newAngle)
-                {
-                    try
-                    {
-                        streams[streamId].direction = newAngle;
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                    }
-                }
+            //    public void changeStreamDirection(int streamId, float newAngle)
+            //    {
+            //        try
+            //        {
+            //            streams[streamId].direction = newAngle;
+            //        }
+            //        catch (IndexOutOfRangeException)
+            //        {
+            //        }
+            //    }
 
-                public void changeStreamRate(int streamId, int newRate)
-                {
-                    streams[streamId].frameRate = newRate;
-                }
+            //    public void changeStreamRate(int streamId, int newRate)
+            //    {
+            //        streams[streamId].frameRate = newRate;
+            //    }
 
-                public void changeStreamCount(int streamId, int newCount)
-                {
-                    streams[streamId].partCount = newCount;
-                }
+            //    public void changeStreamCount(int streamId, int newCount)
+            //    {
+            //        streams[streamId].partCount = newCount;
+            //    }
 
-                public void changeStreamVector(int streamId, Vector2 newVector)
-                {
-                    streams[streamId].pos = newVector;
-                }
+            //    public void changeStreamVector(int streamId, Vector2 newVector)
+            //    {
+            //        streams[streamId].pos = newVector;
+            //    }
 
-                public void changeEmitterVector(int streamId, Vector2 newVector)
-                {
-                    emitters[streamId].pos = newVector;
-                }
+            //    public void changeEmitterVector(int streamId, Vector2 newVector)
+            //    {
+            //        emitters[streamId].pos = newVector;
+            //    }
 
-                public void bounceFromRect(Rectangle rect)
-                {
-                    foreach (particle part in particleList)
-                    {
-                        if ((part.pos.Y + 2 > rect.Y) & (part.pos.Y + 2 < rect.Y + rect.Height) & (part.pos.X > rect.X) & (part.pos.X < rect.X + rect.Width))
-                        {
-                            part.pos.X -= (float)part.hSpeed;
-                            part.pos.Y -= (float)part.vSpeed;
-                            part.vSpeed = -(part.vSpeed * (0.25 + rand.NextDouble() / 5));
-                            part.hSpeed /= (1.2F + rand.NextDouble() / 10);
-                            part.life += 0.5F;
-                            if (rand.Next(10) == 2)
-                                part.hSpeed = -part.hSpeed;
-                        }
-                    }
+            //    public void bounceFromRect(Rectangle rect)
+            //    {
+            //        foreach (particle part in particleList)
+            //        {
+            //            if ((part.pos.Y + 2 > rect.Y) & (part.pos.Y + 2 < rect.Y + rect.Height) & (part.pos.X > rect.X) & (part.pos.X < rect.X + rect.Width))
+            //            {
+            //                part.pos.X -= (float)part.hSpeed;
+            //                part.pos.Y -= (float)part.vSpeed;
+            //                part.vSpeed = -(part.vSpeed * (0.25 + rand.NextDouble() / 5));
+            //                part.hSpeed /= (1.2F + rand.NextDouble() / 10);
+            //                part.life += 0.5F;
+            //                if (rand.Next(10) == 2)
+            //                    part.hSpeed = -part.hSpeed;
+            //            }
+            //        }
 
-                    foreach (Gore part in goreList)
-                    {
-                        if (new Rectangle((int)part.pos.X, (int)part.pos.Y, (int)(10 * 0.5F), (int)(10 * 0.5F)).Intersects(rect))
-                        {
-                            part.pos.X -= (float)part.hSpeed;
-                            part.pos.Y -= (float)part.vSpeed;
-                            part.vSpeed = -(part.vSpeed * (0.25 + rand.NextDouble() / 5));
-                            part.hSpeed /= (1.4F + rand.NextDouble() / 10);
-                            part.life += 0.5F;
-                            part.rotSpeed /= 2;
-                            if (rand.Next(10) == 2)
-                                part.hSpeed = -part.hSpeed;
-                        }
-                    }
-                }
+            //        foreach (Gore part in goreList)
+            //        {
+            //            if (new Rectangle((int)part.pos.X, (int)part.pos.Y, (int)(10 * 0.5F), (int)(10 * 0.5F)).Intersects(rect))
+            //            {
+            //                part.pos.X -= (float)part.hSpeed;
+            //                part.pos.Y -= (float)part.vSpeed;
+            //                part.vSpeed = -(part.vSpeed * (0.25 + rand.NextDouble() / 5));
+            //                part.hSpeed /= (1.4F + rand.NextDouble() / 10);
+            //                part.life += 0.5F;
+            //                part.rotSpeed /= 2;
+            //                if (rand.Next(10) == 2)
+            //                    part.hSpeed = -part.hSpeed;
+            //            }
+            //        }
+            //    }
 
-                public void tick(SpriteBatch batch, Vector2 winPos, Level level)
-                {
-                    foreach (Stream stream in streams)
-                    {
-                        if (stream != null)
-                        {
-                            stream.tick();
-                        }
-                    }
+            //    public void tick(SpriteBatch batch, Vector2 winPos, Level level)
+            //    {
+            //        foreach (Stream stream in streams)
+            //        {
+            //            if (stream != null)
+            //            {
+            //                stream.tick();
+            //            }
+            //        }
 
-                    particle[] temp = particleList.ToArray();
-                    foreach (particle part in temp)
-                    {
-                        if (part != null)
-                        {
-                            part.tick(level);
-                            part.draw(batch, texture, winPos);
-                        }
-                    }
+            //        particle[] temp = particleList.ToArray();
+            //        foreach (particle part in temp)
+            //        {
+            //            if (part != null)
+            //            {
+            //                part.tick(level);
+            //                part.draw(batch, texture, winPos);
+            //            }
+            //        }
 
-                    Gore[] temp2 = goreList.ToArray();
-                    foreach (Gore part in temp2)
-                    {
-                        if (part != null)
-                        {
-                            part.tick();
-                            part.draw(batch, winPos);
-                        }
-                    }
+            //        Gore[] temp2 = goreList.ToArray();
+            //        foreach (Gore part in temp2)
+            //        {
+            //            if (part != null)
+            //            {
+            //                part.tick();
+            //                part.draw(batch, winPos);
+            //            }
+            //        }
 
 
-                    foreach (RectEmitter r in rectEmitters)
-                    {
-                        r.timer++;
-                        if (r.timer >= r.timing)
-                        {
-                            r.burst();
-                            r.timing = 0;
-                        }
-                    }
-                }
+            //        foreach (RectEmitter r in rectEmitters)
+            //        {
+            //            r.timer++;
+            //            if (r.timer >= r.timing)
+            //            {
+            //                r.burst();
+            //                r.timing = 0;
+            //            }
+            //        }
+            //    }
 
-                public int addEmitter(Vector2 pos)
-                {
-                    for (int i = 0; i < 9; i++)
-                    {
-                        if (emitters[i] == null)
-                        {
-                            emitters[i] = new Emitter(pos, this);
-                            return i;
-                        }
-                    }
-                    return -1;
-                }
+            //    public int addEmitter(Vector2 pos)
+            //    {
+            //        for (int i = 0; i < 9; i++)
+            //        {
+            //            if (emitters[i] == null)
+            //            {
+            //                emitters[i] = new Emitter(pos, this);
+            //                return i;
+            //            }
+            //        }
+            //        return -1;
+            //    }
 
-                public void removeEmitter(int id)
-                {
-                    try
-                    {
-                        emitters[id] = null;
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                    }
-                }
+            //    public void removeEmitter(int id)
+            //    {
+            //        try
+            //        {
+            //            emitters[id] = null;
+            //        }
+            //        catch (IndexOutOfRangeException)
+            //        {
+            //        }
+            //    }
 
-                public int addRectEmitter(Rectangle rect, int spacing, int timing, int lifeSpan, float size, Vector2 speed, Color start, Color end)
-                {
-                    rectEmitters.Add(new RectEmitter(rect, this, spacing, timing, lifeSpan, size, speed, start, end));
-                    return rectEmitters.Count - 1;
-                }
+            //    public int addRectEmitter(Rectangle rect, int spacing, int timing, int lifeSpan, float size, Vector2 speed, Color start, Color end)
+            //    {
+            //        rectEmitters.Add(new RectEmitter(rect, this, spacing, timing, lifeSpan, size, speed, start, end));
+            //        return rectEmitters.Count - 1;
+            //    }
 
-                public void removeRectEmitter(int id)
-                {
-                    try
-                    {
-                        rectEmitters[id] = null;
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                    }
-                }
+            //    public void removeRectEmitter(int id)
+            //    {
+            //        try
+            //        {
+            //            rectEmitters[id] = null;
+            //        }
+            //        catch (IndexOutOfRangeException)
+            //        {
+            //        }
+            //    }
 
-                public int addStream(Vector2 pos, int partCount, float size, int lifespan, Vector2 speedScales, Color color, Color endColor, double direction, int frameRate)
-                {
-                    for (int i = 0; i < 9; i++)
-                    {
-                        if (streams[i] == null)
-                        {
-                            streams[i] = new Stream(pos, this, partCount, size, lifespan, speedScales, color, endColor, direction, frameRate);
-                            return i;
-                        }
-                    }
-                    return -1;
-                }
+            //    public int addStream(Vector2 pos, int partCount, float size, int lifespan, Vector2 speedScales, Color color, Color endColor, double direction, int frameRate)
+            //    {
+            //        for (int i = 0; i < 9; i++)
+            //        {
+            //            if (streams[i] == null)
+            //            {
+            //                streams[i] = new Stream(pos, this, partCount, size, lifespan, speedScales, color, endColor, direction, frameRate);
+            //                return i;
+            //            }
+            //        }
+            //        return -1;
+            //    }
 
-                public void burst(int index, int partCount, float radius, float size, int lifespan, float speed, Color color, Color endColor)
-                {
-                    if (index >= 0 & index <= 9)
-                    {
-                        emitters[index].burst(partCount, radius, size, lifespan, new Vector2(speed, speed), color, endColor);
-                    }
-                }
+            //    public void burst(int index, int partCount, float radius, float size, int lifespan, float speed, Color color, Color endColor)
+            //    {
+            //        if (index >= 0 & index <= 9)
+            //        {
+            //            emitters[index].burst(partCount, radius, size, lifespan, new Vector2(speed, speed), color, endColor);
+            //        }
+            //    }
 
-                public void burst(Vector2 pos, Color color, Color endColor, Vector2 speed, int partCount = 1, float radius = 1F, float size = 1F, int lifespan = 100)
-                {
-                    int c = 0;
+            //    public void burst(Vector2 pos, Color color, Color endColor, Vector2 speed, int partCount = 1, float radius = 1F, float size = 1F, int lifespan = 100)
+            //    {
+            //        int c = 0;
 
-                    while (c < partCount)
-                    {
-                        Vector2 testPos = new Vector2((pos.X - radius / 2) + (float)(rand.NextDouble() * (int)radius), (pos.Y - radius / 2) + (float)(rand.NextDouble() * (int)radius));
-                        if (Math.Pow((testPos.X - pos.X), 2) + Math.Pow((testPos.Y - pos.Y), 2) < Math.Pow(radius, 2))
-                        {
-                            addEffect
-                                (testPos,
-                                size, lifespan,
-                                (float)(rand.NextDouble() * speed.X),
-                                (float)(rand.NextDouble() * speed.Y),
-                                color, endColor);
+            //        while (c < partCount)
+            //        {
+            //            Vector2 testPos = new Vector2((pos.X - radius / 2) + (float)(rand.NextDouble() * (int)radius), (pos.Y - radius / 2) + (float)(rand.NextDouble() * (int)radius));
+            //            if (Math.Pow((testPos.X - pos.X), 2) + Math.Pow((testPos.Y - pos.Y), 2) < Math.Pow(radius, 2))
+            //            {
+            //                addEffect
+            //                    (testPos,
+            //                    size, lifespan,
+            //                    (float)(rand.NextDouble() * speed.X),
+            //                    (float)(rand.NextDouble() * speed.Y),
+            //                    color, endColor);
 
-                            c++;
-                        }
-                    }
-                }
+            //                c++;
+            //            }
+            //        }
+            //    }
 
-                //creates an rectangular emmiter that bursts out particles
-                private class RectEmitter
-                {
-                    public Rectangle rect;
-                    public int timing, timer = 0, lifeSpan;
-                    public Color startColor, endColor;
-                    public float partSize;
-                    public Vector2 speeds;
-                    int spacing = 1;
-                    SimpleParticleSystem parent;
+            //    //creates an rectangular emmiter that bursts out particles
+            //    private class RectEmitter
+            //    {
+            //        public Rectangle rect;
+            //        public int timing, timer = 0, lifeSpan;
+            //        public Color startColor, endColor;
+            //        public float partSize;
+            //        public Vector2 speeds;
+            //        int spacing = 1;
+            //        SimpleParticleSystem parent;
 
-                    public RectEmitter(Rectangle rect, SimpleParticleSystem parent, int spacing, int timing, int lifeSpan, float partSize,
-                        Vector2 speeds, Color startColor, Color endColor)
-                    {
-                        this.timing = timing;
-                        this.lifeSpan = lifeSpan;
-                        this.partSize = partSize;
-                        this.speeds = speeds;
-                        this.startColor = startColor;
-                        this.endColor = endColor;
-                        this.rect = rect;
-                        this.parent = parent;
-                        this.spacing = spacing;
-                    }
+            //        public RectEmitter(Rectangle rect, SimpleParticleSystem parent, int spacing, int timing, int lifeSpan, float partSize,
+            //            Vector2 speeds, Color startColor, Color endColor)
+            //        {
+            //            this.timing = timing;
+            //            this.lifeSpan = lifeSpan;
+            //            this.partSize = partSize;
+            //            this.speeds = speeds;
+            //            this.startColor = startColor;
+            //            this.endColor = endColor;
+            //            this.rect = rect;
+            //            this.parent = parent;
+            //            this.spacing = spacing;
+            //        }
 
-                    public void burst()
-                    {
-                        for (int x = rect.X; x < rect.X + rect.Width; x += spacing)
-                        {
-                            for (int y = rect.Y; y < rect.Y + rect.Height; y += spacing)
-                            {
-                                parent.addEffect(new Vector2(x, y), partSize, lifeSpan, speeds, startColor, endColor);
-                            }
-                        }
-                    }
-                }
+            //        public void burst()
+            //        {
+            //            for (int x = rect.X; x < rect.X + rect.Width; x += spacing)
+            //            {
+            //                for (int y = rect.Y; y < rect.Y + rect.Height; y += spacing)
+            //                {
+            //                    parent.addEffect(new Vector2(x, y), partSize, lifeSpan, speeds, startColor, endColor);
+            //                }
+            //            }
+            //        }
+            //    }
 
-                //creates an emmiter that bursts out particles
-                private class Emitter
-                {
-                    public Vector2 pos;
-                    SimpleParticleSystem parent;
+            //    //creates an emmiter that bursts out particles
+            //    private class Emitter
+            //    {
+            //        public Vector2 pos;
+            //        SimpleParticleSystem parent;
 
-                    public Emitter(Vector2 position, SimpleParticleSystem parent)
-                    {
-                        pos = position;
-                        this.parent = parent;
-                    }
+            //        public Emitter(Vector2 position, SimpleParticleSystem parent)
+            //        {
+            //            pos = position;
+            //            this.parent = parent;
+            //        }
 
-                    public void burst(int partCount, float radius, float size, int lifespan, Vector2 speedScales, Color color, Color endColor)
-                    {
-                        int c = 0;
-                        Random rand = new Random();
-                        while (c < partCount)
-                        {
-                            Vector2 testPos = new Vector2((pos.X - radius / 2) + (float)(rand.NextDouble() * (int)radius), (pos.Y - radius / 2) + (float)(rand.NextDouble() * (int)radius));
-                            if (Math.Pow((testPos.X - pos.X), 2) + Math.Pow((testPos.Y - pos.Y), 2) < Math.Pow(radius, 2))
-                            {
-                                parent.addEffect
-                                    (testPos,
-                                    size, lifespan,
-                                    (float)(rand.NextDouble() * (speedScales.X + (pos.X - testPos.X) / radius)) - speedScales.X / 2F,
-                                    (float)(rand.NextDouble() * (speedScales.Y + (pos.Y - testPos.Y) / radius)) - speedScales.X / 2F,
-                                    color, endColor);
+            //        public void burst(int partCount, float radius, float size, int lifespan, Vector2 speedScales, Color color, Color endColor)
+            //        {
+            //            int c = 0;
+            //            Random rand = new Random();
+            //            while (c < partCount)
+            //            {
+            //                Vector2 testPos = new Vector2((pos.X - radius / 2) + (float)(rand.NextDouble() * (int)radius), (pos.Y - radius / 2) + (float)(rand.NextDouble() * (int)radius));
+            //                if (Math.Pow((testPos.X - pos.X), 2) + Math.Pow((testPos.Y - pos.Y), 2) < Math.Pow(radius, 2))
+            //                {
+            //                    parent.addEffect
+            //                        (testPos,
+            //                        size, lifespan,
+            //                        (float)(rand.NextDouble() * (speedScales.X + (pos.X - testPos.X) / radius)) - speedScales.X / 2F,
+            //                        (float)(rand.NextDouble() * (speedScales.Y + (pos.Y - testPos.Y) / radius)) - speedScales.X / 2F,
+            //                        color, endColor);
 
-                                c++;
-                            }
-                        }
-                    }
-                }
+            //                    c++;
+            //                }
+            //            }
+            //        }
+            //    }
 
-                //creates a stream of particles from a single point
-                public class Stream
-                {
-                    public Vector2 pos;
-                    Vector2 speedScales;
-                    SimpleParticleSystem parent;
-                    public int partCount;
-                    public int lifespan;
-                    public double direction;
-                    public float size;
-                    public Color color, endColor;
-                    int counter = 0;
-                    public int frameRate;
+            //    //creates a stream of particles from a single point
+            //    public class Stream
+            //    {
+            //        public Vector2 pos;
+            //        Vector2 speedScales;
+            //        SimpleParticleSystem parent;
+            //        public int partCount;
+            //        public int lifespan;
+            //        public double direction;
+            //        public float size;
+            //        public Color color, endColor;
+            //        int counter = 0;
+            //        public int frameRate;
 
-                    public Stream(Vector2 position, SimpleParticleSystem parent, int partCount, float size, int lifespan, Vector2 speedScales, Color color, Color endColor, double direction, int frameRate)
-                    {
-                        pos = position;
-                        this.parent = parent;
-                        this.partCount = partCount;
-                        this.lifespan = lifespan;
-                        this.size = size;
-                        this.speedScales = speedScales;
-                        this.color = color;
-                        this.endColor = endColor;
-                        this.direction = direction;
-                        this.frameRate = frameRate;
-                    }
+            //        public Stream(Vector2 position, SimpleParticleSystem parent, int partCount, float size, int lifespan, Vector2 speedScales, Color color, Color endColor, double direction, int frameRate)
+            //        {
+            //            pos = position;
+            //            this.parent = parent;
+            //            this.partCount = partCount;
+            //            this.lifespan = lifespan;
+            //            this.size = size;
+            //            this.speedScales = speedScales;
+            //            this.color = color;
+            //            this.endColor = endColor;
+            //            this.direction = direction;
+            //            this.frameRate = frameRate;
+            //        }
 
-                    public void tick()
-                    {
-                        if (frameRate != 501)
-                        {
-                            counter++;
-                            if (counter >= frameRate)
-                            {
-                                Random rand = new Random();
-                                for (int i = 0; i < partCount; i++)
-                                {
-                                    parent.addEffect
-                                        (new Vector2((float)(pos.X - rand.NextDouble() * 10F), (float)(pos.Y - rand.NextDouble() * 10F)),
-                                        size, lifespan,
-                                        (float)(speedScales.X * rand.NextDouble()) - (float)((speedScales.X * rand.NextDouble()) * 2),
-                                        (float)(speedScales.Y * rand.NextDouble()) - (float)((speedScales.Y * rand.NextDouble()) * 2),
-                                        color, endColor);
-                                }
-                                counter = 0;
-                            }
-                        }
-                    }
-                }
+            //        public void tick()
+            //        {
+            //            if (frameRate != 501)
+            //            {
+            //                counter++;
+            //                if (counter >= frameRate)
+            //                {
+            //                    Random rand = new Random();
+            //                    for (int i = 0; i < partCount; i++)
+            //                    {
+            //                        parent.addEffect
+            //                            (new Vector2((float)(pos.X - rand.NextDouble() * 10F), (float)(pos.Y - rand.NextDouble() * 10F)),
+            //                            size, lifespan,
+            //                            (float)(speedScales.X * rand.NextDouble()) - (float)((speedScales.X * rand.NextDouble()) * 2),
+            //                            (float)(speedScales.Y * rand.NextDouble()) - (float)((speedScales.Y * rand.NextDouble()) * 2),
+            //                            color, endColor);
+            //                    }
+            //                    counter = 0;
+            //                }
+            //            }
+            //        }
+            //    }
 
-                /// <summary>
-                /// A particle as part of a SimpleParticleSystem
-                /// </summary>
-                private class particle
-                {
-                    public Vector2 pos;
-                    SimpleParticleSystem parent;
-                    float rChange = 0, gChange = 0, bChange = 0;
-                    float rColor, gColor, bColor;
-                    double alphaChange;
-                    double alpha = 255;
-                    public double hSpeed = 0, vSpeed = 0, vAcc = 0.1F;
-                    public float life;
-                    public Rectangle rect;
+            //    /// <summary>
+            //    /// A particle as part of a SimpleParticleSystem
+            //    /// </summary>
+            //    private class particle
+            //    {
+            //        public Vector2 pos;
+            //        SimpleParticleSystem parent;
+            //        float rChange = 0, gChange = 0, bChange = 0;
+            //        float rColor, gColor, bColor;
+            //        double alphaChange;
+            //        double alpha = 255;
+            //        public double hSpeed = 0, vSpeed = 0, vAcc = 0.1F;
+            //        public float life;
+            //        public Rectangle rect;
 
-                    /// <summary>
-                    /// Creates a new particle
-                    /// </summary>
-                    /// <param name="parent">The SimpleParticleSystem that this particle belongs to</param>
-                    /// <param name="pos">The position of this particle</param>
-                    /// <param name="startColor">The initial color of the particle</param>
-                    /// <param name="endColor">The final color of the particle</param>
-                    /// <param name="startSize">The size of the particle</param>
-                    /// <param name="lifeSpan">How many ticks the particle lasts</param>
-                    /// <param name="startSpeed">The initial horizontal/vertical speeds</param>
-                    public particle(SimpleParticleSystem parent, Vector2 pos, Color startColor, Color endColor, float startSize, int lifeSpan, Vector2 startSpeed)
-                    {
-                        this.parent = parent;
-                        this.pos = pos;
-                        this.rect = new Rectangle(0, 0, (int)startSize, (int)startSize);
-                        this.life = lifeSpan;
-                        this.rChange = (endColor.R - startColor.R) / lifeSpan;
-                        this.bChange = (endColor.B - startColor.B) / lifeSpan;
-                        this.gChange = (endColor.G - startColor.G) / lifeSpan;
-                        this.rColor = startColor.R;
-                        this.gColor = startColor.G;
-                        this.bColor = startColor.B;
-                        this.alphaChange = ((startColor.A - endColor.A) / lifeSpan);
-                        this.vSpeed = startSpeed.Y;
-                        this.hSpeed = startSpeed.X;
-                    }
+            //        /// <summary>
+            //        /// Creates a new particle
+            //        /// </summary>
+            //        /// <param name="parent">The SimpleParticleSystem that this particle belongs to</param>
+            //        /// <param name="pos">The position of this particle</param>
+            //        /// <param name="startColor">The initial color of the particle</param>
+            //        /// <param name="endColor">The final color of the particle</param>
+            //        /// <param name="startSize">The size of the particle</param>
+            //        /// <param name="lifeSpan">How many ticks the particle lasts</param>
+            //        /// <param name="startSpeed">The initial horizontal/vertical speeds</param>
+            //        public particle(SimpleParticleSystem parent, Vector2 pos, Color startColor, Color endColor, float startSize, int lifeSpan, Vector2 startSpeed)
+            //        {
+            //            this.parent = parent;
+            //            this.pos = pos;
+            //            this.rect = new Rectangle(0, 0, (int)startSize, (int)startSize);
+            //            this.life = lifeSpan;
+            //            this.rChange = (endColor.R - startColor.R) / lifeSpan;
+            //            this.bChange = (endColor.B - startColor.B) / lifeSpan;
+            //            this.gChange = (endColor.G - startColor.G) / lifeSpan;
+            //            this.rColor = startColor.R;
+            //            this.gColor = startColor.G;
+            //            this.bColor = startColor.B;
+            //            this.alphaChange = ((startColor.A - endColor.A) / lifeSpan);
+            //            this.vSpeed = startSpeed.Y;
+            //            this.hSpeed = startSpeed.X;
+            //        }
 
-                    /// <summary>
-                    /// Advances the particle by one tick
-                    /// </summary>
-                    public void tick(Level level)
-                    {
-                        if (pos.Y > level.getY(pos.X))
-                        {
-                            vSpeed = -1F;
-                            hSpeed /= 2F;
-                        }
+            //        /// <summary>
+            //        /// Advances the particle by one tick
+            //        /// </summary>
+            //        public void tick(Level level)
+            //        {
+            //            if (pos.Y > level.getY(pos.X))
+            //            {
+            //                vSpeed = -1F;
+            //                hSpeed /= 2F;
+            //            }
 
-                        //handle color changes
-                        rColor += rChange;
-                        gColor += gChange;
-                        bColor += bChange;
-                        alpha += alphaChange;
+            //            //handle color changes
+            //            rColor += rChange;
+            //            gColor += gChange;
+            //            bColor += bChange;
+            //            alpha += alphaChange;
 
-                        //handle destroying this particle
-                        life -= 1;
-                        if (life <= 0)
-                        {
-                            parent.destroyParticle(this);
-                        }
+            //            //handle destroying this particle
+            //            life -= 1;
+            //            if (life <= 0)
+            //            {
+            //                parent.destroyParticle(this);
+            //            }
 
-                        vAcc *= 1.001F;
+            //            vAcc *= 1.001F;
 
-                        hSpeed /= 1.001F;
-                        vSpeed += vAcc;
+            //            hSpeed /= 1.001F;
+            //            vSpeed += vAcc;
 
-                        pos.X += (float)hSpeed;
-                        pos.Y += (float)vSpeed;
-                    }
+            //            pos.X += (float)hSpeed;
+            //            pos.Y += (float)vSpeed;
+            //        }
 
-                    /// <summary>
-                    /// Draws this particle using the SpriteBatch
-                    /// </summary>
-                    /// <param name="batch">The spriteBatch to draw to</param>
-                    /// <param name="texture">The texture of this particle</param>
-                    /// <param name="winPos">The position of the frame relative to (0,0)</param>
-                    public void draw(SpriteBatch batch, Texture2D texture, Vector2 winPos)
-                    {
-                        batch.Draw(texture, pos - winPos, rect,
-                            Color.FromNonPremultiplied((int)rColor, (int)gColor, (int)bColor, (int)alpha));
-                    }
-                }
+            //        /// <summary>
+            //        /// Draws this particle using the SpriteBatch
+            //        /// </summary>
+            //        /// <param name="batch">The spriteBatch to draw to</param>
+            //        /// <param name="texture">The texture of this particle</param>
+            //        /// <param name="winPos">The position of the frame relative to (0,0)</param>
+            //        public void draw(SpriteBatch batch, Texture2D texture, Vector2 winPos)
+            //        {
+            //            batch.Draw(texture, pos - winPos, rect,
+            //                Color.FromNonPremultiplied((int)rColor, (int)gColor, (int)bColor, (int)alpha));
+            //        }
+            //    }
 
-                /// <summary>
-                /// A peice of gore as part of a SimpleParticleSystem
-                /// </summary>
-                private class Gore
-                {
-                    public Vector2 pos;
-                    SimpleParticleSystem parent;
-                    double rChange = 0, gChange = 0, bChange = 0;
-                    double rColor, gColor, bColor;
-                    double alphaChange;
-                    double alpha = 255;
-                    public double hSpeed = 0, vSpeed = 0, vAcc = 0.1F;
-                    public float life, angle, rotSpeed;
-                    public int texID = 0;
-                    public Rectangle rect;
+            //    /// <summary>
+            //    /// A peice of gore as part of a SimpleParticleSystem
+            //    /// </summary>
+            //    private class Gore
+            //    {
+            //        public Vector2 pos;
+            //        SimpleParticleSystem parent;
+            //        double rChange = 0, gChange = 0, bChange = 0;
+            //        double rColor, gColor, bColor;
+            //        double alphaChange;
+            //        double alpha = 255;
+            //        public double hSpeed = 0, vSpeed = 0, vAcc = 0.1F;
+            //        public float life, angle, rotSpeed;
+            //        public int texID = 0;
+            //        public Rectangle rect;
 
-                    /// <summary>
-                    /// Creates a new particle
-                    /// </summary>
-                    /// <param name="parent">The SimpleParticleSystem that this particle belongs to</param>
-                    /// <param name="pos">The position of this particle</param>
-                    /// <param name="startColor">The initial color of the particle</param>
-                    /// <param name="endColor">The final color of the particle</param>
-                    /// <param name="startSize">The size of the particle</param>
-                    /// <param name="lifeSpan">How many ticks the particle lasts</param>
-                    /// <param name="startSpeed">The initial horizontal/vertical speeds</param>
-                    public Gore(SimpleParticleSystem parent, Vector2 pos, Color startColor, Color endColor, float startSize, int lifeSpan, Vector2 startSpeed,
-                        int texID)
-                    {
-                        this.parent = parent;
-                        this.pos = pos;
-                        this.rect = new Rectangle(0, 0, parent.goreTexs[texID].Width, parent.goreTexs[texID].Height);
-                        this.life = lifeSpan;
-                        this.rChange = (endColor.R - startColor.R) / (double)lifeSpan;
-                        this.bChange = (endColor.B - startColor.B) / (double)lifeSpan;
-                        this.gChange = (endColor.G - startColor.G) / (double)lifeSpan;
-                        this.rColor = startColor.R;
-                        this.gColor = startColor.G;
-                        this.bColor = startColor.B;
-                        this.alphaChange = (startColor.A / lifeSpan);
-                        this.vSpeed = startSpeed.Y;
-                        this.hSpeed = startSpeed.X;
-                        this.texID = texID;
-                        this.angle = (float)(parent.rand.NextDouble() * MathHelper.TwoPi);
-                        rotSpeed = parent.rand.Next(-10, 10) / 10F;
-                    }
+            //        /// <summary>
+            //        /// Creates a new particle
+            //        /// </summary>
+            //        /// <param name="parent">The SimpleParticleSystem that this particle belongs to</param>
+            //        /// <param name="pos">The position of this particle</param>
+            //        /// <param name="startColor">The initial color of the particle</param>
+            //        /// <param name="endColor">The final color of the particle</param>
+            //        /// <param name="startSize">The size of the particle</param>
+            //        /// <param name="lifeSpan">How many ticks the particle lasts</param>
+            //        /// <param name="startSpeed">The initial horizontal/vertical speeds</param>
+            //        public Gore(SimpleParticleSystem parent, Vector2 pos, Color startColor, Color endColor, float startSize, int lifeSpan, Vector2 startSpeed,
+            //            int texID)
+            //        {
+            //            this.parent = parent;
+            //            this.pos = pos;
+            //            this.rect = new Rectangle(0, 0, parent.goreTexs[texID].Width, parent.goreTexs[texID].Height);
+            //            this.life = lifeSpan;
+            //            this.rChange = (endColor.R - startColor.R) / (double)lifeSpan;
+            //            this.bChange = (endColor.B - startColor.B) / (double)lifeSpan;
+            //            this.gChange = (endColor.G - startColor.G) / (double)lifeSpan;
+            //            this.rColor = startColor.R;
+            //            this.gColor = startColor.G;
+            //            this.bColor = startColor.B;
+            //            this.alphaChange = (startColor.A / lifeSpan);
+            //            this.vSpeed = startSpeed.Y;
+            //            this.hSpeed = startSpeed.X;
+            //            this.texID = texID;
+            //            this.angle = (float)(parent.rand.NextDouble() * MathHelper.TwoPi);
+            //            rotSpeed = parent.rand.Next(-10, 10) / 10F;
+            //        }
 
-                    /// <summary>
-                    /// Advances the particle by one tick
-                    /// </summary>
-                    public void tick()
-                    {
-                        angle += rotSpeed;
-                        if (pos.X < 0 | pos.Y < 0)
-                            parent.destroyGore(this);
+            //        /// <summary>
+            //        /// Advances the particle by one tick
+            //        /// </summary>
+            //        public void tick()
+            //        {
+            //            angle += rotSpeed;
+            //            if (pos.X < 0 | pos.Y < 0)
+            //                parent.destroyGore(this);
 
-                        //handle color changes
-                        rColor += rChange;
-                        gColor += gChange;
-                        bColor += bChange;
+            //            //handle color changes
+            //            rColor += rChange;
+            //            gColor += gChange;
+            //            bColor += bChange;
 
-                        //handle destroying this particle
-                        life -= 1;
-                        if (life <= 0)
-                        {
-                            parent.destroyGore(this);
-                        }
+            //            //handle destroying this particle
+            //            life -= 1;
+            //            if (life <= 0)
+            //            {
+            //                parent.destroyGore(this);
+            //            }
 
-                        vAcc *= 1.001F;
+            //            vAcc *= 1.001F;
 
-                        hSpeed /= 1.001F;
-                        vSpeed += vAcc;
+            //            hSpeed /= 1.001F;
+            //            vSpeed += vAcc;
 
-                        pos.X += (float)hSpeed;
-                        pos.Y += (float)vSpeed;
-                    }
+            //            pos.X += (float)hSpeed;
+            //            pos.Y += (float)vSpeed;
+            //        }
 
-                    /// <summary>
-                    /// Draws this particle using the SpriteBatch
-                    /// </summary>
-                    /// <param name="batch">The spriteBatch to draw to</param>
-                    /// <param name="texture">The texture of this particle</param>
-                    /// <param name="winPos">The position of the frame relative to (0,0)</param>
-                    public void draw(SpriteBatch batch, Vector2 winPos)
-                    {
-                        batch.Draw(parent.goreTexs[texID], pos - winPos, rect,
-                            Color.FromNonPremultiplied((int)rColor, (int)gColor, (int)bColor, (int)alpha), angle, new Vector2(5, 10),
-                            0.75F, SpriteEffects.None, 0F);
-                    }
-                }
-            }
+            //        /// <summary>
+            //        /// Draws this particle using the SpriteBatch
+            //        /// </summary>
+            //        /// <param name="batch">The spriteBatch to draw to</param>
+            //        /// <param name="texture">The texture of this particle</param>
+            //        /// <param name="winPos">The position of the frame relative to (0,0)</param>
+            //        public void draw(SpriteBatch batch, Vector2 winPos)
+            //        {
+            //            batch.Draw(parent.goreTexs[texID], pos - winPos, rect,
+            //                Color.FromNonPremultiplied((int)rColor, (int)gColor, (int)bColor, (int)alpha), angle, new Vector2(5, 10),
+            //                0.75F, SpriteEffects.None, 0F);
+            //        }
+            //    }
+            //}
         }
     }
 }
